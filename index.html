@@ -257,17 +257,20 @@
       <div class="screw screw-left"></div>
       <div class="screw screw-right"></div>
 
-      <button class="toy-btn btn-blue" onclick="playVoice('sound1.mp3', '無限の彼方へ、さあ行くぞ！')">
+      <!-- ボタン1 (sound1-1, sound1-2, sound1-3) -->
+      <button class="toy-btn btn-blue" onclick="playRandomGroup(1)">
         <span class="btn-text-small">ボイス</span>
         <span class="btn-text-large">1</span>
       </button>
 
-      <button class="toy-btn btn-green" onclick="playVoice('sound2.mp3', 'スターコマンド、応答せよ！')">
+      <!-- ボタン2 (sound2-1, sound2-2, sound2-3) -->
+      <button class="toy-btn btn-green" onclick="playRandomGroup(2)">
         <span class="btn-text-small">ボイス</span>
         <span class="btn-text-large">2</span>
       </button>
 
-      <button class="toy-btn btn-red" onclick="playVoice('sound3.mp3', 'レーザー光線、発射！！')">
+      <!-- ボタン3 (sound3-1, sound3-2, sound3-3) -->
+      <button class="toy-btn btn-red" onclick="playRandomGroup(3)">
         <span class="btn-text-small">ボイス</span>
         <span class="btn-text-large">3</span>
       </button>
@@ -281,43 +284,89 @@
   </div>
 
   <script>
+    // 各ボタンに対応する音声データとフォールバックテキストの設定
+    const voiceGroups = {
+      1: [
+        { prefix: 'sound1-1', text: 'スターコマンドおうとうせよ' },
+        { prefix: 'sound1-2', text: 'にっし' },
+        { prefix: 'sound1-3', text: 'スターコマンドおうとうせよ' }
+      ],
+      2: [
+        { prefix: 'sound2-1', text: 'てきではない' },
+        { prefix: 'sound2-2', text: 'すすめ！スペースレンジャー' },
+        { prefix: 'sound2-3', text: 'すすめ！スペースレンジャー' }
+      ],
+      3: [
+        { prefix: 'sound3-1', text: '無限の彼方へ、さあ行くぞ！' },
+        { prefix: 'sound3-2', text: '無限の彼方へ、さあ行くぞ！' },
+        { prefix: 'sound3-3', text: '無限の彼方へ、さあ行くぞ！' };
+
+    // 対応する拡張子のリスト（省略時に試行する順番）
+    const extensions = ['.mp3', '.wav', '.m4a', '.ogg'];
+
     let currentAudio = null;
 
-    function playVoice(soundFile, text) {
+    function playRandomGroup(groupId) {
+      const group = voiceGroups[groupId];
+      if (!group || group.length === 0) return;
+
+      // グループ内からランダムに1つの音声を抽出
+      const randomIndex = Math.floor(Math.random() * group.length);
+      const selectedVoice = group[randomIndex];
+
+      playVoiceItem(selectedVoice);
+    }
+
+    function playVoiceItem(voiceItem) {
       const lcd = document.getElementById('lcd-text');
       const led = document.getElementById('led');
 
-      // 液晶画面のテキスト更新 ＆ LED発光
-      lcd.innerText = text;
+      // 液晶表示＆LEDをON
+      lcd.innerText = voiceItem.text;
       led.classList.add('active');
 
-      // 既存の音声をストップ
+      // 前の再生を停止
       if (currentAudio) {
         currentAudio.pause();
         currentAudio.currentTime = 0;
       }
-
-      // 音声ファイルを再生
-      currentAudio = new Audio(soundFile);
+      speechSynthesis.cancel();
 
       const resetUI = () => {
         lcd.innerText = "ボタンをおしてね！";
         led.classList.remove('active');
       };
 
-      currentAudio.onended = resetUI;
+      // 拡張子なしのファイル名に対して、拡張子を順番に試す関数
+      let extIndex = 0;
 
-      currentAudio.play().catch(() => {
-        // 音声ファイルが見つからない場合はブラウザの音声合成（Web Speech API）でフォールバック
-        speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = "ja-JP";
-        utterance.pitch = 1.3;
-        utterance.rate = 1.1;
+      function tryNextAudio() {
+        if (extIndex >= extensions.length) {
+          // 音声ファイルが見つからなかった場合は音声合成（Web Speech API）で再生
+          const utterance = new SpeechSynthesisUtterance(voiceItem.text);
+          utterance.lang = "ja-JP";
+          utterance.pitch = 1.3;
+          utterance.rate = 1.1;
 
-        utterance.onend = resetUI;
-        speechSynthesis.speak(utterance);
-      });
+          utterance.onend = resetUI;
+          speechSynthesis.speak(utterance);
+          return;
+        }
+
+        const currentPath = voiceItem.prefix + extensions[extIndex];
+        extIndex++;
+
+        currentAudio = new Audio(currentPath);
+        
+        currentAudio.onended = resetUI;
+
+        // 再生を試行し、失敗した場合は次の拡張子を試す
+        currentAudio.play().catch(() => {
+          tryNextAudio();
+        });
+      }
+
+      tryNextAudio();
     }
   </script>
 
