@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>スペースレンジャー アーマー</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background-color: #050714;
+      font-family: 'Arial Rounded MT Bold', 'Helvetica Neue', Arial, sans-serif;
+      user-select: none;
+      overflow-x: hidden;
+    }
+
+    /* 全体コンテナ */
+    .suit-container {
+      position: relative;
+      width: 700px;
+      height: 520px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    /* --- 翼（ウイング） --- */
+    .wing {
+      position: absolute;
+      top: 170px;
+      height: 110px;
+      width: 240px;
+      background: #7e22ce;
+      border: 4px solid #1e1b4b;
+      z-index: 1;
+      transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .wing-stripe {
+      height: 28px;
+      width: 100%;
+      background: repeating-linear-gradient(
+        -135deg,
+        #dc2626,
+        #dc2626 15px,
+        #ffffff 15px,
+        #ffffff 30px
+      );
+      border-bottom: 3px solid #1e1b4b;
+    }
+
+    .wing-left {
+      right: 50%;
+      transform-origin: right center;
+      transform: scaleX(0);
+      border-radius: 12px 0 0 12px;
+    }
+    .wing-left.open { transform: scaleX(1) translateX(-180px); }
+
+    .wing-right {
+      left: 50%;
+      transform-origin: left center;
+      transform: scaleX(0);
+      border-radius: 0 12px 12px 0;
+    }
+    .wing-right.open { transform: scaleX(1) translateX(180px); }
+
+    .wing-tip {
+      position: absolute;
+      top: -12px;
+      width: 32px;
+      height: 130px;
+      background-color: #65a30d;
+      border: 3px solid #1e1b4b;
+      border-radius: 16px;
+      display: flex;
+      justify-content: center;
+      padding-top: 6px;
+    }
+    .wing-left .wing-tip { left: -16px; }
+    .wing-right .wing-tip { right: -16px; }
+
+    .wing-light {
+      width: 18px;
+      height: 30px;
+      border-radius: 10px;
+      border: 2px solid rgba(255, 255, 255, 0.8);
+    }
+    .wing-left .wing-light { background-color: #4ade80; box-shadow: 0 0 12px #22c55e; }
+    .wing-right .wing-light { background-color: #f87171; box-shadow: 0 0 12px #ef4444; }
+
+    /* --- メインチェストプレート（胸部） --- */
+    .chest-plate {
+      position: relative;
+      width: 440px;
+      height: 320px;
+      background: linear-gradient(to bottom, #84cc16 0%, #65a30d 100%);
+      border: 8px solid #3f6212;
+      border-radius: 40px 40px 120px 120px;
+      box-shadow: inset 0 8px 0 rgba(255,255,255,0.4), 0 20px 30px rgba(0,0,0,0.6);
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 10px;
+    }
+
+    /* ネックライン */
+    .neck-ring {
+      position: absolute;
+      top: -110px;
+      width: 260px;
+      height: 150px;
+      background: #cbd5e1;
+      border: 6px solid #475569;
+      border-radius: 130px 130px 30px 30px;
+      z-index: 8;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      padding-bottom: 12px;
+      overflow: hidden;
+    }
+
+    /* --- バイザー内部の顔描画（目・眉なし） --- */
+    .character-head {
+      position: relative;
+      width: 110px;
+      height: 120px;
+      background: #fed7aa;
+      border-radius: 45px 45px 35px 35px;
+      border: 3px solid #7c2d12;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: inset 0 -6px 10px rgba(0,0,0,0.15);
+    }
+
+    /* 紫のフードキャップ */
+    .head-hood {
+      position: absolute;
+      top: -3px;
+      width: 114px;
+      height: 55px;
+      background: #7e22ce;
+      border-radius: 50px 50px 0 0;
+      border-bottom: 3px solid #581c87;
+    }
+
+    /* 鼻 */
+    .nose {
+      position: absolute;
+      top: 65px;
+      width: 10px;
+      height: 14px;
+      border-right: 3px solid #ea580c;
+      border-bottom: 3px solid #ea580c;
+      border-radius: 2px;
+      transform: rotate(15deg);
+      z-index: 2;
+    }
+
+    /* 口 */
+    .mouth {
+      position: absolute;
+      top: 86px;
+      width: 42px;
+      height: 16px;
+      border-bottom: 3px solid #7c2d12;
+      border-radius: 0 0 18px 18px;
+      z-index: 2;
+    }
+
+    /* 顎ひげ（渦巻き） */
+    .chin-swirl {
+      position: absolute;
+      top: 102px;
+      width: 10px;
+      height: 10px;
+      border: 2px solid #7c2d12;
+      border-top: transparent;
+      border-left: transparent;
+      border-radius: 50%;
+      transform: rotate(45deg);
+      z-index: 2;
+    }
+
+    /* --- 透明ドームバイザーの開閉演出 --- */
+    .visor-dome {
+      position: absolute;
+      top: -165px;
+      width: 280px;
+      height: 220px;
+      border-radius: 140px 140px 30px 30px;
+      background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.45) 0%, rgba(186, 230, 253, 0.2) 50%, rgba(56, 189, 248, 0.35) 100%);
+      border: 4px solid rgba(255, 255, 255, 0.85);
+      box-shadow: inset 0 20px 30px rgba(255, 255, 255, 0.7), 0 10px 20px rgba(0, 0, 0, 0.3);
+      z-index: 15;
+      transform-origin: center 190px;
+      transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+      pointer-events: none;
+    }
+
+    .visor-dome.open {
+      transform: rotateX(-105deg) scale(0.9);
+      opacity: 0.15;
+    }
+
+    .visor-glare {
+      position: absolute;
+      top: 15px;
+      left: 30px;
+      width: 220px;
+      height: 90px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0) 70%);
+      border-radius: 100px 100px 0 0;
+    }
+
+    /* --- 中央バッジ＆右上プレート --- */
+    .chest-center-layout {
+      position: relative;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 10px;
+      z-index: 12;
+    }
+
+    .space-ranger-badge {
+      width: 150px;
+      height: 58px;
+      background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+      border: 3px solid #0c4a6e;
+      border-radius: 8px 8px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 2px 4px rgba(255,255,255,0.8), 0 4px 6px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .badge-text {
+      color: #0f172a;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .badge-symbol {
+      position: relative;
+      width: 75px;
+      height: 22px;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .badge-wing-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .lightyear-plate {
+      position: absolute;
+      right: 35px;
+      top: -5px;
+      background: #facc15;
+      border: 3px solid #713f12;
+      border-radius: 6px;
+      padding: 4px 10px;
+      color: #713f12;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      transform: rotate(-6deg);
+      box-shadow: 0 3px 5px rgba(0,0,0,0.3);
+    }
+
+    /* --- ボタンエリア --- */
+    .controls-row {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 45px;
+      margin-top: 20px;
+      z-index: 12;
+    }
+
+    .voice-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-capsule {
+      width: 24px;
+      height: 65px;
+      border-radius: 12px;
+      border: 3px solid #0f172a;
+      cursor: pointer;
+      outline: none;
+      transition: transform 0.08s, box-shadow 0.08s;
+      box-shadow: inset -2px -2px 4px rgba(0,0,0,0.5), inset 2px 2px 4px rgba(255,255,255,0.6), 0 4px 6px rgba(0,0,0,0.4);
+    }
+    .btn-capsule:active {
+      transform: translateY(3px);
+      box-shadow: inset 2px 2px 4px rgba(0,0,0,0.7);
+    }
+
+    .btn-blue { background: linear-gradient(to right, #2563eb, #1d4ed8); }
+    .btn-green { background: linear-gradient(to right, #16a34a, #15803d); }
+    .btn-red { background: linear-gradient(to right, #dc2626, #b91c1c); }
+
+    .btn-wing-round {
+      width: 65px;
+      height: 65px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ef4444 0%, #dc2626 60%, #991b1b 100%);
+      border: 4px solid #0f172a;
+      box-shadow: inset -3px -3px 6px rgba(0,0,0,0.5), inset 3px 3px 6px rgba(255,255,255,0.7), 0 6px 10px rgba(0,0,0,0.4);
+      cursor: pointer;
+      outline: none;
+      transition: transform 0.08s, box-shadow 0.08s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 10px;
+      font-weight: bold;
+    }
+    .btn-wing-round:active {
+      transform: translateY(4px);
+      box-shadow: inset 2px 2px 6px rgba(0,0,0,0.7), 0 2px 4px rgba(0,0,0,0.4);
+    }
+
+    .btn-visor-side {
+      position: absolute;
+      right: -24px;
+      top: 90px;
+      width: 28px;
+      height: 55px;
+      background: linear-gradient(to right, #a855f7, #7e22ce);
+      border: 3px solid #3b0764;
+      border-radius: 0 10px 10px 0;
+      cursor: pointer;
+      box-shadow: 3px 4px 6px rgba(0,0,0,0.4);
+      z-index: 11;
+      transition: transform 0.08s;
+    }
+    .btn-visor-side:active { transform: translateX(-2px); }
+
+    .status-display {
+      margin-top: 15px;
+      background-color: #0f172a;
+      border: 2px solid #38bdf8;
+      border-radius: 8px;
+      padding: 6px 16px;
+      color: #38bdf8;
+      font-size: 12px;
+      letter-spacing: 1px;
+      z-index: 12;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+      text-align: center;
+      max-width: 90%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="suit-container">
+    
+    <!-- 翼（ウイング） -->
+    <div id="wing-left" class="wing wing-left">
+      <div class="wing-stripe"></div>
+      <div class="wing-tip">
+        <div class="wing-light"></div>
+      </div>
+    </div>
+    
+    <div id="wing-right" class="wing wing-right">
+      <div class="wing-stripe"></div>
+      <div class="wing-tip">
+        <div class="wing-light"></div>
+      </div>
+    </div>
+
+    <!-- メイン胸部アーマー -->
+    <div class="chest-plate">
+      
+      <!-- ネックリングとキャラクター顔描画 -->
+      <div class="neck-ring">
+        <div class="character-head">
+          <div class="head-hood"></div>
+          <div class="nose"></div>
+          <div class="mouth"></div>
+          <div class="chin-swirl"></div>
+        </div>
+      </div>
+
+      <!-- 開閉式ドームバイザー -->
+      <div id="visor" class="visor-dome">
+        <div class="visor-glare"></div>
+      </div>
+
+      <!-- バイザー開閉ボタン -->
+      <button class="btn-visor-side" onclick="toggleVisor()" title="バイザー開閉"></button>
+
+      <!-- 胸部中央 SPACE RANGER エンブレム＆LIGHTYEAR -->
+      <div class="chest-center-layout">
+        <div class="space-ranger-badge">
+          <span class="badge-text">Space Ranger</span>
+          <div class="badge-symbol">
+            <svg class="badge-wing-svg" viewBox="0 0 100 30">
+              <polygon points="50,2 62,28 38,28" fill="#e2e8f0" />
+              <path d="M 50,10 L 10,5 L 20,22 Z" fill="#38bdf8" stroke="#0f172a" stroke-width="1.5" />
+              <path d="M 50,10 L 90,5 L 80,22 Z" fill="#38bdf8" stroke="#0f172a" stroke-width="1.5" />
+              <polygon points="50,6 53,15 62,15 55,20 57,28 50,23 43,28 45,20 38,15 47,15" fill="#facc15" />
+            </svg>
+          </div>
+        </div>
+        <div class="lightyear-plate">LIGHTYEAR</div>
+      </div>
+
+      <!-- ボタン操作部 -->
+      <div class="controls-row">
+        <!-- 左側：ボイス3色ボタン -->
+        <div class="voice-buttons">
+          <button class="btn-capsule btn-blue" onclick="playVoiceGroup(1)"></button>
+          <button class="btn-capsule btn-green" onclick="playVoiceGroup(2)"></button>
+          <button class="btn-capsule btn-red" onclick="playVoiceGroup(3)"></button>
+        </div>
+
+        <!-- 右側：翼開閉ボタン -->
+        <button class="btn-wing-round" onclick="toggleWings()">
+          WING
+        </button>
+      </div>
+
+      <!-- 情報表示用LCD -->
+      <div id="status" class="status-display">SYSTEM READY</div>
+
+    </div>
+
+  </div>
+
+  <script>
+    let isVisorOpen = false;
+    let isWingOpen = false;
+    let audioCtx = null;
+    let currentAudio = null;
+
+    // ボイスグループ定義
+    const voiceGroups = {
+      1: [
+        { prefix: 'sound1-1', text: '無限の彼方へ、さあ行くぞ！' },
+        { prefix: 'sound1-2', text: '私はバズ・ライトイヤー、平和を守るレンジャーだ！' },
+        { prefix: 'sound1-3', text: 'ミッション開始！準備はいいか？' }
+      ],
+      2: [
+        { prefix: 'sound2-1', text: 'スターコマンド、応答せよ！' },
+        { prefix: 'sound2-2', text: '異常なし！パトロールを継続する。' },
+        { prefix: 'sound2-3', text: 'こちらスペースレンジャー、感度良好だ。' }
+      ],
+      3: [
+        { prefix: 'sound3-1', text: 'レーザー光線、発射！！' },
+        { prefix: 'sound3-2', text: '危険だ！下がっていろ！' },
+        { prefix: 'sound3-3', text: '悪の帝王ザーグを倒すのだ！' }
+      ]
+    };
+
+    // 対応する拡張子のリスト
+    const extensions = ['.mp3', '.wav', '.m4a', '.ogg'];
+
+    // 音声ファイルの存在をチェックする関数
+    async function findExistingAudioUrl(prefix) {
+      for (const ext of extensions) {
+        const url = `${prefix}${ext}`;
+        try {
+          const response = await fetch(url, { method: 'HEAD' });
+          if (response.ok) {
+            return url;
+          }
+        } catch (e) {
+          // ファイルが存在しない、またはローカルサーバーエラーの場合は無視して次の拡張子へ
+        }
+      }
+      return null;
+    }
+
+    // 「シュッ」という空気圧・機械ノイズ音をWeb Audio APIで生成
+    function playSwooshSound() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      
+      const sampleRate = audioCtx.sampleRate;
+      const duration = 0.22;
+      const bufferSize = sampleRate * duration;
+      const buffer = audioCtx.createBuffer(1, bufferSize, sampleRate);
+      const data = buffer.getChannelData(0);
+
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(1200, audioCtx.currentTime);
+      filter.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + duration);
+      filter.Q.value = 2.0;
+
+      const gain = audioCtx.createGain();
+      gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.7, audioCtx.currentTime + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+      noise.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      noise.start();
+    }
+
+    // バイザー開閉
+    function toggleVisor() {
+      const visor = document.getElementById('visor');
+      const status = document.getElementById('status');
+      
+      isVisorOpen = !isVisorOpen;
+      playSwooshSound();
+      
+      if (isVisorOpen) {
+        visor.classList.add('open');
+        status.innerText = "VISOR: OPENED";
+      } else {
+        visor.classList.remove('open');
+        status.innerText = "VISOR: LOCKED";
+      }
+    }
+
+    // 翼（ウイング）展開・収納
+    function toggleWings() {
+      const wingLeft = document.getElementById('wing-left');
+      const wingRight = document.getElementById('wing-right');
+      const status = document.getElementById('status');
+
+      isWingOpen = !isWingOpen;
+      playSwooshSound();
+
+      if (isWingOpen) {
+        wingLeft.classList.add('open');
+        wingRight.classList.add('open');
+        status.innerText = "WINGS: DEPLOYED";
+      } else {
+        wingLeft.classList.remove('open');
+        wingRight.classList.remove('open');
+        status.innerText = "WINGS: RETRACTED";
+      }
+    }
+
+    // ボイス再生処理（自動判定）
+    async function playVoiceGroup(groupId) {
+      const status = document.getElementById('status');
+      const items = voiceGroups[groupId];
+      if (!items) return;
+
+      // 前の再生を停止
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+      }
+      speechSynthesis.cancel();
+
+      // グループ内からランダムに1個選択
+      const item = items[Math.floor(Math.random() * items.length)];
+      status.innerText = item.text;
+
+      // ファイルの存在確認
+      const audioUrl = await findExistingAudioUrl(item.prefix);
+
+      if (audioUrl) {
+        // ファイルが見つかった場合は再生
+        currentAudio = new Audio(audioUrl);
+        currentAudio.play();
+      } else {
+        // ファイルが見つからない場合は合成音声で再生
+        const utterance = new SpeechSynthesisUtterance(item.text);
+        utterance.lang = "ja-JP";
+        utterance.pitch = 1.1;
+        utterance.rate = 1.0;
+        speechSynthesis.speak(utterance);
+      }
+    }
+  </script>
+
+</body>
+</html>
